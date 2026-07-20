@@ -1,3 +1,7 @@
+# JWarp Banner
+
+![JWarp banner](JWarp-banner-1280x640.png)
+
 # JWarp
 
 JWarp is a small Paper plugin for managing named warps with per-warp permissions.
