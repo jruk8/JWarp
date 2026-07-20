@@ -24,12 +24,13 @@ class YamlFileUpdaterTest {
         Map<String, String> resources = Map.of(
             "config.yml",
             """
-                config-version: 2
+                config-version: 3
                 sound:
                   enabled: true
                   name: "minecraft:block.note_block.pling"
                   volume: 1.0
                   pitch: 1.0
+                warp-cooldown: 3.0
                 actionbar:
                   enabled: true
                   length-ticks: 40
@@ -38,7 +39,7 @@ class YamlFileUpdaterTest {
                 """,
             "messages.yml",
             """
-                messages-version: 2
+                messages-version: 3
                 prefix: "&8[&bJWarp&8] "
                 warp:
                   actionbar: "&eWarping to &f{warp}&e"
@@ -58,10 +59,15 @@ class YamlFileUpdaterTest {
             configFile,
             "config.yml",
             "config-version",
-            2,
-            List.of(new YamlMigration(2, config -> {
+            3,
+            List.of(new YamlMigration(3, config -> {
                 if ("BLOCK_NOTE_BLOCK_PLING".equalsIgnoreCase(config.getString("sound.name"))) {
                     config.set("sound.name", "minecraft:block.note_block.pling");
+                    return true;
+                }
+
+                if (!config.contains("warp-cooldown")) {
+                    config.set("warp-cooldown", 3.0);
                     return true;
                 }
 
@@ -71,10 +77,11 @@ class YamlFileUpdaterTest {
 
         YamlConfiguration updated = YamlConfiguration.loadConfiguration(configFile);
         assertTrue(changed);
-        assertEquals(2, updated.getInt("config-version"));
+        assertEquals(3, updated.getInt("config-version"));
         assertEquals(false, updated.getBoolean("sound.enabled"));
         assertEquals("minecraft:block.note_block.pling", updated.getString("sound.name"));
         assertEquals(1.0, updated.getDouble("sound.volume"));
+        assertEquals(3.0, updated.getDouble("warp-cooldown"));
         assertEquals("keep", updated.getString("custom.value"));
         assertTrue(updated.contains("actionbar.length-ticks"));
         assertTrue(updated.contains("actionbar.fadeout-ticks"));

@@ -16,7 +16,9 @@ commands:
     permission: jwarp.warps
   jwarp:
     description: Manage JWarp warps and reload configuration
-    usage: /jwarp <reload|delwarp|setwarp|redefine|setpermission|bypass>
+    usage: /jwarp <help|reload|delwarp|setwarp|redefine|setpermission|bypass|info|version>
+    aliases:
+      - jw
 
 permissions:
   jwarp.warp:
@@ -40,6 +42,12 @@ permissions:
   jwarp.setpermission:
     description: Toggle a warp's permission requirement
     default: op
+  jwarp.info:
+    description: View detailed information for a warp
+    default: true
+  jwarp.version:
+    description: View JWarp version information
+    default: true
   jwarp.bypass:
     description: Toggle bypass for warps that require permission
     default: op

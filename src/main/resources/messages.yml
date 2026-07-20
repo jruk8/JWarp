@@ -1,4 +1,4 @@
-messages-version: 2
+messages-version: 3
 
 prefix: "&8[&bJWarp&8] "
 
@@ -10,6 +10,7 @@ warp:
   no-permission: "{prefix}&cYou do not have permission to use /warp."
   missing: "{prefix}&cWarp &e{warp}&c was not found."
   permission-required: "{prefix}&cThis warp requires &e{permission}&c."
+  cooldown: "{prefix}&cWait &e{seconds}s&c before warping again."
   invalid-world: "{prefix}&cWarp &e{warp}&c points to a missing world."
   teleported: "{prefix}&aTeleported to &e{warp}&a."
   actionbar: "&eWarping to &f{warp}&e"
@@ -21,7 +22,13 @@ warps:
   list: "{prefix}&f{warps}"
 
 jwarp:
-  usage: "{prefix}&eUsage: /jwarp <reload|delwarp|setwarp|redefine|setpermission|bypass>"
+  usage: "{prefix}&eUsage: /jwarp <reload|delwarp|setwarp|redefine|setpermission|bypass|info|version>"
+  help:
+    header: "{prefix}&eJWarp commands:"
+    alias: "{prefix}&7/jw is a shorthand for /jwarp."
+    commands: "{prefix}&eAvailable commands:"
+    command-line: "{prefix}&f{command}"
+    warps: "{prefix}&eWarps: &f{warps}"
   reload:
     usage: "{prefix}&eUsage: /jwarp reload"
     no-permission: "{prefix}&cYou do not have permission to reload JWarp."
@@ -52,3 +59,15 @@ jwarp:
     no-permission: "{prefix}&cYou do not have permission to toggle bypass."
     enabled: "{prefix}&aBypass enabled."
     disabled: "{prefix}&eBypass disabled."
+  info:
+    usage: "{prefix}&eUsage: /jwarp info <warp>"
+    no-permission: "{prefix}&cYou do not have permission to view warp info."
+    missing: "{prefix}&cWarp &e{warp}&c was not found."
+    header: "{prefix}&eInfo for &f{warp}&e:"
+    world: "{prefix}&7World: &f{world}"
+    position: "{prefix}&7Position: &f{x}, {y}, {z}"
+    permission: "{prefix}&7Permission: &f{permission}"
+  version:
+    usage: "{prefix}&eUsage: /jwarp version"
+    no-permission: "{prefix}&cYou do not have permission to view the version."
+    message: "{prefix}&aJWarp &f{version}&a on &f{server}&a. Java &f{java}&a."

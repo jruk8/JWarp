@@ -1,5 +1,5 @@
 # Version marker used for automatic config updates.
-config-version: 2
+config-version: 3
 
 # Permission node template used when /jwarp setpermission <warp-name> true is run.
 # {warp} is replaced with the normalized warp name.
@@ -11,6 +11,9 @@ sound:
   name: "minecraft:block.note_block.pling"
   volume: 1.0
   pitch: 1.0
+
+# Global warp cooldown in seconds.
+warp-cooldown: 3.0
 
 # Actionbar is shown for successful /warp teleports.
 # Minecraft action bars do not expose a real fade-out animation, so fadeout-ticks
