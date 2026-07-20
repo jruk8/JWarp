@@ -38,3 +38,4 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           game-versions: ${{ vars.MODRINTH_GAME_VERSIONS }}
           loaders: paper
+          fail-mode: warn
