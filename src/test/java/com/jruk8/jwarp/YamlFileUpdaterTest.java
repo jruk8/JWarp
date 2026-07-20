@@ -39,10 +39,10 @@ class YamlFileUpdaterTest {
                 """,
             "messages.yml",
             """
-                messages-version: 3
-                prefix: "&8[&bJWarp&8] "
+                messages-version: 4
+                prefix: "<dark_gray>[<aqua>JWarp<dark_gray>] "
                 warp:
-                  actionbar: "&eWarping to &f{warp}&e"
+                  actionbar: "<yellow>Warping to <white>{warp}<yellow>"
                 """);
 
         YamlFileUpdater updater = new YamlFileUpdater(name -> stream(resources.get(name)));

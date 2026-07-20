@@ -1,6 +1,7 @@
 package com.jruk8.jwarp;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -11,6 +12,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,8 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, TabCompleter, Listener {
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final int CONFIG_VERSION = 3;
-    private static final int MESSAGES_VERSION = 3;
+    private static final int MESSAGES_VERSION = 4;
     private static final String DEFAULT_PERMISSION_TEMPLATE = "jwarp.warp.{warp}";
     private static final String BASE_WARP_PERMISSION = "jwarp.warp";
     private static final String WARPS_PERMISSION = "jwarp.warps";
@@ -428,7 +431,6 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         for (String commandLine : availableCommandLines(sender)) {
             sender.sendMessage(message("jwarp.help.command-line", Map.of("{command}", commandLine)));
         }
-        sender.sendMessage(message("jwarp.help.warps"));
         sender.sendMessage(message("jwarp.help.warps", Map.of("{warps}", String.join(", ", warpStore.names()))));
         return true;
     }
@@ -509,17 +511,17 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         };
     }
 
-    private String message(String path) {
+    private Component message(String path) {
         return message(path, Map.of());
     }
 
-    private String message(String path, Map<String, String> replacements) {
+    private Component message(String path, Map<String, String> replacements) {
         String raw = messages.getString(path, path);
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
             raw = raw.replace(entry.getKey(), entry.getValue());
         }
 
-        String prefix = MessageFormatter.colorize(messages.getString("prefix", ""));
+        String prefix = messages.getString("prefix", "");
         return MessageFormatter.format(raw, prefix);
     }
 
@@ -564,12 +566,12 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         return null;
     }
 
-    private void sendActionBar(Player player, String actionBarMessage) {
+    private void sendActionBar(Player player, Component actionBarMessage) {
         if (!getConfig().getBoolean("actionbar.enabled", true)) {
             return;
         }
 
-        if (actionBarMessage == null || actionBarMessage.isBlank()) {
+        if (actionBarMessage == null) {
             return;
         }
 
@@ -577,7 +579,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         long fadeoutTicks = Math.max(0L, getConfig().getLong("actionbar.fadeout-ticks", 0L));
         long totalTicks = lengthTicks + fadeoutTicks;
 
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(actionBarMessage));
+        player.sendActionBar(actionBarMessage);
 
         UUID playerId = player.getUniqueId();
         BukkitTask previousTask = actionBarClearTasks.remove(playerId);
@@ -627,6 +629,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         messagesFile = new File(getDataFolder(), "messages.yml");
         fileUpdater.update(messagesFile, "messages.yml", "messages-version", MESSAGES_VERSION, List.of());
         messages = YamlConfiguration.loadConfiguration(messagesFile);
+        migrateLegacyMessages();
     }
 
     private void ensureDataFolder() {
@@ -650,6 +653,61 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
 
     private String formatSeconds(double seconds) {
         return String.format(Locale.ROOT, "%.1f", seconds);
+    }
+
+    private void migrateLegacyMessages() {
+        if (!containsLegacyCodes(messages)) {
+            return;
+        }
+
+        replaceLegacyCodes(messages);
+        messages.set("messages-version", MESSAGES_VERSION);
+        try {
+            messages.save(messagesFile);
+        } catch (Exception exception) {
+            throw new IllegalStateException("Could not migrate messages.yml", exception);
+        }
+    }
+
+    private boolean containsLegacyCodes(ConfigurationSection section) {
+        for (String key : section.getKeys(false)) {
+            if (section.isConfigurationSection(key)) {
+                ConfigurationSection child = section.getConfigurationSection(key);
+                if (child != null && containsLegacyCodes(child)) {
+                    return true;
+                }
+                continue;
+            }
+
+            String value = section.getString(key, null);
+            if (value != null && value.contains("&")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void replaceLegacyCodes(ConfigurationSection section) {
+        for (String key : section.getKeys(false)) {
+            if (section.isConfigurationSection(key)) {
+                ConfigurationSection child = section.getConfigurationSection(key);
+                if (child != null) {
+                    replaceLegacyCodes(child);
+                }
+                continue;
+            }
+
+            String value = section.getString(key, null);
+            if (value != null && value.contains("&")) {
+                section.set(
+                    key,
+                    MINI_MESSAGE.serialize(
+                        LegacyComponentSerializer.legacyAmpersand().deserialize(value)
+                    )
+                );
+            }
+        }
     }
 
     private List<String> tabCompleteWarps(String[] args) {

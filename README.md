@@ -25,4 +25,5 @@ Commands:
 
 The default permission node template is `jwarp.warp.{warp}`. You can change it in `config.yml`.
 `config.yml` also controls the default success sound, warp cooldown, and warp actionbar display.
+`messages.yml` uses MiniMessage formatting, not legacy `&` color codes.
 See `CONTRIBUTING.md` for build instructions and contributor setup.

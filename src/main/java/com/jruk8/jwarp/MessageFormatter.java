@@ -1,34 +1,17 @@
 package com.jruk8.jwarp;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 public final class MessageFormatter {
+    private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+
     private MessageFormatter() {
     }
 
-    public static String format(String template, String prefix) {
+    public static Component format(String template, String prefix) {
         String value = template == null ? "" : template;
         String resolvedPrefix = prefix == null ? "" : prefix;
-        return colorize(value.replace("{prefix}", resolvedPrefix));
-    }
-
-    public static String colorize(String input) {
-        if (input == null || input.isEmpty()) {
-            return "";
-        }
-
-        StringBuilder output = new StringBuilder(input.length());
-
-        for (int index = 0; index < input.length(); index++) {
-            char character = input.charAt(index);
-
-            if (character == '&' && index + 1 < input.length()) {
-                output.append('\u00A7');
-                output.append(input.charAt(++index));
-                continue;
-            }
-
-            output.append(character);
-        }
-
-        return output.toString();
+        return MINI_MESSAGE.deserialize(value.replace("{prefix}", resolvedPrefix));
     }
 }
