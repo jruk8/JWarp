@@ -3,12 +3,43 @@ version: ${version}
 main: com.jruk8.jwarp.JWarpPlugin
 api-version: "26.2"
 author: jruk8
-description: Minimal test warp plugin
+description: Minimal warp plugin with per-warp permissions
 
 commands:
-  testwarp:
-    description: Teleport to the configured test warp
-    usage: /testwarp
+  warp:
+    description: Teleport to a named warp
+    usage: /warp <warp-name>
+    permission: jwarp.warp
+  warps:
+    description: List all configured warps
+    usage: /warps
+    permission: jwarp.warps
   jwarp:
-    description: Reload the plugin configuration
-    usage: /jwarp reload
+    description: Manage JWarp warps and reload configuration
+    usage: /jwarp <reload|delwarp|setwarp|redefine|setpermission|bypass>
+
+permissions:
+  jwarp.warp:
+    description: Use /warp to teleport to configured warps
+    default: true
+  jwarp.warps:
+    description: List all configured warps
+    default: true
+  jwarp.reload:
+    description: Reload plugin configuration and messages
+    default: op
+  jwarp.delwarp:
+    description: Delete a configured warp
+    default: op
+  jwarp.setwarp:
+    description: Create a warp at the current location
+    default: op
+  jwarp.redefine:
+    description: Redefine an existing warp at the current location
+    default: op
+  jwarp.setpermission:
+    description: Toggle a warp's permission requirement
+    default: op
+  jwarp.bypass:
+    description: Toggle bypass for warps that require permission
+    default: op

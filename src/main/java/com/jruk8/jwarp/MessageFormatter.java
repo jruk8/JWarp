@@ -21,7 +21,7 @@ public final class MessageFormatter {
             char character = input.charAt(index);
 
             if (character == '&' && index + 1 < input.length()) {
-                output.append('§');
+                output.append('\u00A7');
                 output.append(input.charAt(++index));
                 continue;
             }

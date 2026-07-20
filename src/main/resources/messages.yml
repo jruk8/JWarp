@@ -1,9 +1,51 @@
 prefix: "&8[&bJWarp&8] "
 
-testwarp:
-  teleported: "{prefix}&aTeleported to the test warp."
-  console-only: "{prefix}&cOnly players can use /testwarp."
+command:
+  player-only: "{prefix}&cOnly players can use this command."
 
-reload:
-  success: "{prefix}&aReloaded config.yml and messages.yml."
-  usage: "{prefix}&eUsage: /jwarp reload"
+warp:
+  usage: "{prefix}&eUsage: /warp <warp-name>"
+  no-permission: "{prefix}&cYou do not have permission to use /warp."
+  missing: "{prefix}&cWarp &e{warp}&c was not found."
+  permission-required: "{prefix}&cThis warp requires &e{permission}&c."
+  invalid-world: "{prefix}&cWarp &e{warp}&c points to a missing world."
+  teleported: "{prefix}&aTeleported to &e{warp}&a."
+
+warps:
+  no-permission: "{prefix}&cYou do not have permission to use /warps."
+  empty: "{prefix}&eThere are no warps configured."
+  header: "{prefix}&eAvailable warps (&f{count}&e):"
+  list: "{prefix}&f{warps}"
+
+jwarp:
+  usage: "{prefix}&eUsage: /jwarp <reload|delwarp|setwarp|redefine|setpermission|bypass>"
+  reload:
+    usage: "{prefix}&eUsage: /jwarp reload"
+    no-permission: "{prefix}&cYou do not have permission to reload JWarp."
+    success: "{prefix}&aReloaded config.yml and messages.yml."
+  delwarp:
+    usage: "{prefix}&eUsage: /jwarp delwarp <warp-name>"
+    no-permission: "{prefix}&cYou do not have permission to delete warps."
+    missing: "{prefix}&cWarp &e{warp}&c was not found."
+    success: "{prefix}&aDeleted warp &e{warp}&a."
+  setwarp:
+    usage: "{prefix}&eUsage: /jwarp setwarp <warp-name>"
+    no-permission: "{prefix}&cYou do not have permission to create warps."
+    exists: "{prefix}&cWarp &e{warp}&c already exists. Use &e/jwarp redefine {warp}&c instead."
+    success: "{prefix}&aCreated warp &e{warp}&a."
+  redefine:
+    usage: "{prefix}&eUsage: /jwarp redefine <warp-name>"
+    no-permission: "{prefix}&cYou do not have permission to redefine warps."
+    missing: "{prefix}&cWarp &e{warp}&c was not found."
+    success: "{prefix}&aRedefined warp &e{warp}&a."
+  setpermission:
+    usage: "{prefix}&eUsage: /jwarp setpermission <warp-name> <true/false>"
+    no-permission: "{prefix}&cYou do not have permission to change warp permissions."
+    missing: "{prefix}&cWarp &e{warp}&c was not found."
+    enabled: "{prefix}&aSet permission to &e{permission}&a."
+    disabled: "{prefix}&aDisabled the permission requirement for &e{warp}&a."
+  bypass:
+    usage: "{prefix}&eUsage: /jwarp bypass"
+    no-permission: "{prefix}&cYou do not have permission to toggle bypass."
+    enabled: "{prefix}&aBypass enabled."
+    disabled: "{prefix}&eBypass disabled."
