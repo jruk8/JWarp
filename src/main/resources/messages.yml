@@ -12,8 +12,8 @@ warp:
   permission-required: "{prefix}<red>This warp requires <yellow>{permission}<red>."
   cooldown: "{prefix}<red>Wait <yellow>{seconds}s<red> before warping again."
   invalid-world: "{prefix}<red>Warp <yellow>{warp}<red> points to a missing world."
-  teleported: "{prefix}<green>Teleported to <yellow>{warp}<green>."
-  actionbar: "<yellow>Warping to <white>{warp}<yellow>"
+  teleported: "{prefix}<green>Warping to <yellow>{warp}<green>."
+  actionbar: "<green>Warping to <yellow>{warp}<green>"
 
 warps:
   no-permission: "{prefix}<red>You do not have permission to use /warps."
