@@ -1,0 +1,14 @@
+name: JWarp
+version: ${version}
+main: com.jruk8.jwarp.JWarpPlugin
+api-version: "26.2"
+author: jruk8
+description: Minimal test warp plugin
+
+commands:
+  testwarp:
+    description: Teleport to the configured test warp
+    usage: /testwarp
+  jwarp:
+    description: Reload the plugin configuration
+    usage: /jwarp reload

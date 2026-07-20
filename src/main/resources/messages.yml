@@ -1,0 +1,9 @@
+prefix: "&8[&bJWarp&8] "
+
+testwarp:
+  teleported: "{prefix}&aTeleported to the test warp."
+  console-only: "{prefix}&cOnly players can use /testwarp."
+
+reload:
+  success: "{prefix}&aReloaded config.yml and messages.yml."
+  usage: "{prefix}&eUsage: /jwarp reload"
