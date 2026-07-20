@@ -1,25 +1,23 @@
 # JWarp
 
-Minimal Paper plugin with two commands and a tiny test/lint setup.
+JWarp is a small Paper plugin for managing named warps with per-warp permissions.
 
-`/testwarp` teleports a player to the coordinates defined in `config.yml`.
+Commands:
 
-`/jwarp reload` reloads both `config.yml` and `messages.yml`.
+- `/warp <warp-name>` teleports to a warp.
+- `/warps` lists configured warps.
+- `/jwarp reload` reloads `config.yml` and `messages.yml`.
+- `/jwarp setwarp <warp-name>` creates a warp at the current location.
+- `/jwarp redefine <warp-name>` updates an existing warp to the current location.
+- `/jwarp delwarp <warp-name>` deletes a warp.
+- `/jwarp setpermission <warp-name> <true/false>` enables or disables the warp's permission requirement.
+- `/jwarp bypass` toggles bypass for warps that require permission.
 
-## Build
+The default permission node template is `jwarp.warp.{warp}`. You can change it in `config.yml`.
 
-Use Gradle from the repository root:
+Build from the repository root:
 
-- `./gradlew build` compiles the plugin, runs the tests, and packages the jar.
-- `./gradlew check` runs the tests and the linter.
-
-## Layout
-
-- Source code goes in `src/main/java`.
-- Runtime files go in `src/main/resources`.
-- Tests go in `src/test/java`.
-- Build output goes in `build/`.
-
-## Notes
+- `./gradlew build`
+- `./gradlew check`
 
 The project uses Gradle and Java 25.

@@ -9,7 +9,7 @@ class MessageFormatterTest {
     void formatsPrefixAndColorCodes() {
         String result = MessageFormatter.format("{prefix}&aHello", "&8[&bJWarp&8] ");
 
-        assertEquals("§8[§bJWarp§8] §aHello", result);
+        assertEquals("\u00A78[\u00A7bJWarp\u00A78] \u00A7aHello", result);
     }
 
     @Test
