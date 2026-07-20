@@ -1,5 +1,3 @@
-# JWarp Banner
-
 ![JWarp banner](JWarp-banner-1280x640.png)
 
 # JWarp
