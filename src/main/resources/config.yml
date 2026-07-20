@@ -1,5 +1,23 @@
+# Version marker used for automatic config updates.
+config-version: 2
+
 # Permission node template used when /jwarp setpermission <warp-name> true is run.
 # {warp} is replaced with the normalized warp name.
 permission-template: "jwarp.warp.{warp}"
+
+# Optional success sound for player-issued commands.
+sound:
+  enabled: true
+  name: "minecraft:block.note_block.pling"
+  volume: 1.0
+  pitch: 1.0
+
+# Actionbar is shown for successful /warp teleports.
+# Minecraft action bars do not expose a real fade-out animation, so fadeout-ticks
+# is treated as extra hold time before the bar is cleared.
+actionbar:
+  enabled: true
+  length-ticks: 40
+  fadeout-ticks: 0
 
 warps: {}

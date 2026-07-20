@@ -1,3 +1,5 @@
+messages-version: 2
+
 prefix: "&8[&bJWarp&8] "
 
 command:
@@ -10,6 +12,7 @@ warp:
   permission-required: "{prefix}&cThis warp requires &e{permission}&c."
   invalid-world: "{prefix}&cWarp &e{warp}&c points to a missing world."
   teleported: "{prefix}&aTeleported to &e{warp}&a."
+  actionbar: "&eWarping to &f{warp}&e"
 
 warps:
   no-permission: "{prefix}&cYou do not have permission to use /warps."

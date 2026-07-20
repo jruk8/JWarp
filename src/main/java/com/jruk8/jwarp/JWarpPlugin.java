@@ -1,6 +1,10 @@
 package com.jruk8.jwarp;
 
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -10,6 +14,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.io.File;
 import java.util.List;
@@ -21,6 +28,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Listener {
+    private static final int CONFIG_VERSION = 2;
+    private static final int MESSAGES_VERSION = 2;
+    private static final String DEFAULT_PERMISSION_TEMPLATE = "jwarp.warp.{warp}";
     private static final String BASE_WARP_PERMISSION = "jwarp.warp";
     private static final String WARPS_PERMISSION = "jwarp.warps";
     private static final String RELOAD_PERMISSION = "jwarp.reload";
@@ -31,15 +41,17 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
     private static final String BYPASS_PERMISSION = "jwarp.bypass";
 
     private final Set<UUID> bypassPlayers = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, BukkitTask> actionBarClearTasks = new ConcurrentHashMap<>();
+    private YamlFileUpdater fileUpdater;
     private WarpStore warpStore;
     private File messagesFile;
     private YamlConfiguration messages;
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        fileUpdater = new YamlFileUpdater(this::getResource);
+        updateConfigurationFiles();
         warpStore = new WarpStore(this);
-        reloadMessages();
 
         Objects.requireNonNull(getCommand("warp")).setExecutor(this);
         Objects.requireNonNull(getCommand("warps")).setExecutor(this);
@@ -52,6 +64,8 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
     @Override
     public void onDisable() {
         bypassPlayers.clear();
+        actionBarClearTasks.values().forEach(BukkitTask::cancel);
+        actionBarClearTasks.clear();
         messages = null;
     }
 
@@ -107,6 +121,8 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         player.teleport(location);
         player.sendMessage(message("warp.teleported", Map.of("{warp}", warpName)));
+        playSuccessSound(player);
+        sendActionBar(player, message("warp.actionbar", Map.of("{warp}", warpName)));
         return true;
     }
 
@@ -124,6 +140,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         sender.sendMessage(message("warps.header", Map.of("{count}", Integer.toString(warps.size()))));
         sender.sendMessage(message("warps.list", Map.of("{warps}", String.join(", ", warps))));
+        playSuccessSound(sender);
         return true;
     }
 
@@ -159,9 +176,9 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
             return true;
         }
 
-        reloadConfig();
-        reloadMessages();
+        updateConfigurationFiles();
         sender.sendMessage(message("jwarp.reload.success"));
+        playSuccessSound(sender);
         return true;
     }
 
@@ -184,6 +201,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         warpStore.delete(warpName);
         sender.sendMessage(message("jwarp.delwarp.success", Map.of("{warp}", warpName)));
+        playSuccessSound(sender);
         return true;
     }
 
@@ -211,6 +229,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         warpStore.setWarp(warpName, player.getLocation());
         player.sendMessage(message("jwarp.setwarp.success", Map.of("{warp}", warpName)));
+        playSuccessSound(player);
         return true;
     }
 
@@ -238,6 +257,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         warpStore.redefineWarp(warpName, player.getLocation());
         player.sendMessage(message("jwarp.redefine.success", Map.of("{warp}", warpName)));
+        playSuccessSound(player);
         return true;
     }
 
@@ -266,16 +286,18 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         if (enabled) {
             String permissionNode = WarpPermissions.resolvePermissionNode(
-                getConfig().getString("permission-template", "jwarp.warp.{warp}"),
+                getConfig().getString("permission-template", DEFAULT_PERMISSION_TEMPLATE),
                 warpName
             );
             warpStore.setPermission(warpName, permissionNode);
             sender.sendMessage(message("jwarp.setpermission.enabled", Map.of("{permission}", permissionNode)));
+            playSuccessSound(sender);
             return true;
         }
 
         warpStore.setPermission(warpName, "");
         sender.sendMessage(message("jwarp.setpermission.disabled", Map.of("{warp}", warpName)));
+        playSuccessSound(sender);
         return true;
     }
 
@@ -298,11 +320,13 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
         if (hasBypass(player)) {
             bypassPlayers.remove(player.getUniqueId());
             player.sendMessage(message("jwarp.bypass.disabled"));
+            playSuccessSound(player);
             return true;
         }
 
         bypassPlayers.add(player.getUniqueId());
         player.sendMessage(message("jwarp.bypass.enabled"));
+        playSuccessSound(player);
         return true;
     }
 
@@ -331,19 +355,6 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
         };
     }
 
-    private void reloadMessages() {
-        if (!getDataFolder().exists() && !getDataFolder().mkdirs()) {
-            throw new IllegalStateException("Could not create plugin data folder.");
-        }
-
-        messagesFile = new File(getDataFolder(), "messages.yml");
-        if (!messagesFile.exists()) {
-            saveResource("messages.yml", false);
-        }
-
-        messages = YamlConfiguration.loadConfiguration(messagesFile);
-    }
-
     private String message(String path) {
         return message(path, Map.of());
     }
@@ -356,5 +367,106 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Li
 
         String prefix = MessageFormatter.colorize(messages.getString("prefix", ""));
         return MessageFormatter.format(raw, prefix);
+    }
+
+    private void playSuccessSound(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            return;
+        }
+
+        if (!getConfig().getBoolean("sound.enabled", true)) {
+            return;
+        }
+
+        Sound sound = resolveSound(getConfig().getString("sound.name", "BLOCK_NOTE_BLOCK_PLING"));
+        if (sound == null) {
+            return;
+        }
+
+        float volume = (float) getConfig().getDouble("sound.volume", 1.0);
+        float pitch = (float) getConfig().getDouble("sound.pitch", 1.0);
+        player.playSound(player.getLocation(), sound, SoundCategory.PLAYERS, volume, pitch);
+    }
+
+    private Sound resolveSound(String soundName) {
+        if (soundName == null || soundName.isBlank()) {
+            return null;
+        }
+
+        NamespacedKey key = NamespacedKey.fromString(soundName.trim());
+        if (key == null && soundName.indexOf(':') < 0) {
+            key = NamespacedKey.fromString("minecraft:" + soundName.trim().toLowerCase(Locale.ROOT).replace('_', '.'));
+        }
+
+        return key == null ? null : Registry.SOUNDS.get(key);
+    }
+
+    private void sendActionBar(Player player, String actionBarMessage) {
+        if (!getConfig().getBoolean("actionbar.enabled", true)) {
+            return;
+        }
+
+        if (actionBarMessage == null || actionBarMessage.isBlank()) {
+            return;
+        }
+
+        long lengthTicks = Math.max(1L, getConfig().getLong("actionbar.length-ticks", 40L));
+        long fadeoutTicks = Math.max(0L, getConfig().getLong("actionbar.fadeout-ticks", 0L));
+        long totalTicks = lengthTicks + fadeoutTicks;
+
+        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(actionBarMessage));
+
+        UUID playerId = player.getUniqueId();
+        BukkitTask previousTask = actionBarClearTasks.remove(playerId);
+        if (previousTask != null) {
+            previousTask.cancel();
+        }
+
+        BukkitTask clearTask = getServer().getScheduler().runTaskLater(this, () -> {
+            if (player.isOnline()) {
+                player.sendActionBar(Component.empty());
+            }
+            actionBarClearTasks.remove(playerId);
+        }, totalTicks);
+
+        actionBarClearTasks.put(playerId, clearTask);
+    }
+
+    private void updateConfigurationFiles() {
+        ensureDataFolder();
+
+        fileUpdater.update(
+            new File(getDataFolder(), "config.yml"),
+            "config.yml",
+            "config-version",
+            CONFIG_VERSION,
+            List.of(
+                new YamlMigration(2, config -> {
+                    String soundName = config.getString("sound.name", "");
+                    if (soundName != null && isLegacySoundName(soundName)) {
+                        config.set("sound.name", "minecraft:block.note_block.pling");
+                        return true;
+                    }
+
+                    return false;
+                })
+            )
+        );
+        reloadConfig();
+
+        messagesFile = new File(getDataFolder(), "messages.yml");
+        fileUpdater.update(messagesFile, "messages.yml", "messages-version", MESSAGES_VERSION, List.of());
+        messages = YamlConfiguration.loadConfiguration(messagesFile);
+    }
+
+    private void ensureDataFolder() {
+        if (!getDataFolder().exists() && !getDataFolder().mkdirs()) {
+            throw new IllegalStateException("Could not create plugin data folder.");
+        }
+    }
+
+    private boolean isLegacySoundName(String soundName) {
+        String normalized = soundName.trim().toUpperCase(Locale.ROOT);
+        return normalized.equals("BLOCK_NOTE_BLOCK_PLING") || normalized.equals("NOTE_BLOCK_PLING");
     }
 }
