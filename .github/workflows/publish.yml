@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -27,10 +29,38 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: Generate changelog
+        id: changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current_tag="${GITHUB_REF_NAME}"
+          previous_tag="$(git tag --sort=-version:refname --list 'v*' | grep -Fxv "$current_tag" | head -n 1 || true)"
+
+          if [ -n "$previous_tag" ]; then
+            range="${previous_tag}..HEAD"
+          else
+            range="HEAD"
+          fi
+
+          notes="$(git log --no-merges --pretty=format:'- %s' "$range")"
+
+          if [ -z "$notes" ]; then
+            notes="- No commit messages available."
+          fi
+
+          {
+            echo 'notes<<EOF'
+            echo "$notes"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: build/libs/*.jar
+          body: ${{ steps.changelog.outputs.notes }}
 
       - name: Publish to Modrinth
         uses: Kir-Antipov/mc-publish@v3.3
@@ -38,6 +68,7 @@ jobs:
           name: JWarp ${{ github.ref_name }}
           version: ${{ github.ref_name }}
           version-type: release
+          changelog: ${{ steps.changelog.outputs.notes }}
           files: build/libs/*.jar
           modrinth-id: ${{ vars.MODRINTH_ID }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
