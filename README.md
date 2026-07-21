@@ -4,7 +4,13 @@
 
 JWarp is a small Paper plugin for managing named warps with per-warp permissions.
 
-Commands:
+Download: https://modrinth.com/plugin/jwarp
+
+Contribute: https://github.com/jruk8/JWarp
+
+License: GPL 3.0
+
+## Commands:
 
 | Command | Permission | Notes |
 | --- | --- | --- |
