@@ -8,8 +8,6 @@ Download: https://modrinth.com/plugin/jwarp
 
 Contribute: https://github.com/jruk8/JWarp
 
-License: GPL 3.0
-
 ## Commands:
 
 | Command | Permission | Notes |
@@ -33,3 +31,5 @@ Admin-only commands are grouped under `jwarp.admin.*`, so a single wildcard gran
 `config.yml` also controls the default success sound, warp cooldown, and warp actionbar display.
 `messages.yml` uses MiniMessage formatting, not legacy `&` color codes.
 See `CONTRIBUTING.md` for build instructions and contributor setup.
+
+© 2026 jruk8. Licensed under GNU GPLv3.
