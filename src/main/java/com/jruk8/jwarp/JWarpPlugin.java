@@ -39,14 +39,14 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
     private static final String DEFAULT_PERMISSION_TEMPLATE = "jwarp.warp.{warp}";
     private static final String BASE_WARP_PERMISSION = "jwarp.warp";
     private static final String WARPS_PERMISSION = "jwarp.warps";
-    private static final String RELOAD_PERMISSION = "jwarp.reload";
-    private static final String SET_WARP_PERMISSION = "jwarp.setwarp";
-    private static final String DEL_WARP_PERMISSION = "jwarp.delwarp";
-    private static final String REDEFINE_PERMISSION = "jwarp.redefine";
-    private static final String SET_PERMISSION_PERMISSION = "jwarp.setpermission";
-    private static final String INFO_PERMISSION = "jwarp.info";
-    private static final String VERSION_PERMISSION = "jwarp.version";
-    private static final String BYPASS_PERMISSION = "jwarp.bypass";
+    private static final String RELOAD_PERMISSION = "jwarp.admin.reload";
+    private static final String SET_WARP_PERMISSION = "jwarp.admin.setwarp";
+    private static final String DEL_WARP_PERMISSION = "jwarp.admin.delwarp";
+    private static final String REDEFINE_PERMISSION = "jwarp.admin.redefine";
+    private static final String SET_PERMISSION_PERMISSION = "jwarp.admin.setpermission";
+    private static final String INFO_PERMISSION = "jwarp.admin.info";
+    private static final String VERSION_PERMISSION = "jwarp.admin.version";
+    private static final String BYPASS_PERMISSION = "jwarp.admin.bypass";
 
     private final Set<UUID> bypassPlayers = ConcurrentHashMap.newKeySet();
     private final Map<UUID, BukkitTask> actionBarClearTasks = new ConcurrentHashMap<>();
@@ -107,7 +107,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
     ) {
         String commandName = command.getName().toLowerCase(Locale.ROOT);
         if ("warp".equals(commandName)) {
-            return tabCompleteWarps(args);
+            return tabCompleteWarps(sender, args);
         }
 
         if ("jwarp".equals(commandName)) {
@@ -172,7 +172,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
             return true;
         }
 
-        List<String> warps = warpStore.names();
+        List<String> warps = visibleWarps(sender);
         if (warps.isEmpty()) {
             sender.sendMessage(message("warps.empty"));
             return true;
@@ -431,7 +431,7 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         for (String commandLine : availableCommandLines(sender)) {
             sender.sendMessage(message("jwarp.help.command-line", Map.of("{command}", commandLine)));
         }
-        sender.sendMessage(message("jwarp.help.warps", Map.of("{warps}", String.join(", ", warpStore.names()))));
+        sender.sendMessage(message("jwarp.help.warps", Map.of("{warps}", String.join(", ", visibleWarps(sender)))));
         return true;
     }
 
@@ -710,15 +710,35 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         }
     }
 
-    private List<String> tabCompleteWarps(String[] args) {
+    private List<String> tabCompleteWarps(CommandSender sender, String[] args) {
         if (args.length != 1) {
             return List.of();
         }
 
         String prefix = args[0].toLowerCase(Locale.ROOT);
-        return warpStore.names().stream()
+        return visibleWarps(sender).stream()
             .filter(warp -> warp.startsWith(prefix))
             .collect(Collectors.toList());
+    }
+
+    private List<String> visibleWarps(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            return warpStore.names();
+        }
+
+        return warpStore.names().stream()
+            .filter(warpName -> warpStore.find(warpName)
+                .map(warp -> canAccessWarp(player, warp))
+                .orElse(false))
+            .collect(Collectors.toList());
+    }
+
+    private boolean canAccessWarp(Player player, WarpDefinition warp) {
+        if (!player.hasPermission(BASE_WARP_PERMISSION)) {
+            return false;
+        }
+
+        return !warp.requiresPermission() || hasBypass(player) || player.hasPermission(warp.permission());
     }
 
     private List<String> tabCompleteJWarp(CommandSender sender, String[] args) {

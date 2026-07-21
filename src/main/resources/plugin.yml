@@ -27,27 +27,39 @@ permissions:
   jwarp.warps:
     description: List all configured warps
     default: true
-  jwarp.reload:
+  jwarp.admin:
+    description: Access all JWarp admin commands
+    default: op
+    children:
+      jwarp.admin.reload: true
+      jwarp.admin.delwarp: true
+      jwarp.admin.setwarp: true
+      jwarp.admin.redefine: true
+      jwarp.admin.setpermission: true
+      jwarp.admin.info: true
+      jwarp.admin.version: true
+      jwarp.admin.bypass: true
+  jwarp.admin.reload:
     description: Reload plugin configuration and messages
     default: op
-  jwarp.delwarp:
+  jwarp.admin.delwarp:
     description: Delete a configured warp
     default: op
-  jwarp.setwarp:
+  jwarp.admin.setwarp:
     description: Create a warp at the current location
     default: op
-  jwarp.redefine:
+  jwarp.admin.redefine:
     description: Redefine an existing warp at the current location
     default: op
-  jwarp.setpermission:
+  jwarp.admin.setpermission:
     description: Toggle a warp's permission requirement
     default: op
-  jwarp.info:
+  jwarp.admin.info:
     description: View detailed information for a warp
     default: true
-  jwarp.version:
+  jwarp.admin.version:
     description: View JWarp version information
     default: true
-  jwarp.bypass:
+  jwarp.admin.bypass:
     description: Toggle bypass for warps that require permission
     default: op
