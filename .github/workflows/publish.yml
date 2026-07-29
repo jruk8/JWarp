@@ -1,15 +1,13 @@
-name: Publish to Modrinth
+name: Publish
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
@@ -50,27 +48,30 @@ jobs:
             notes="- No commit messages available."
           fi
 
+          delimiter="$(openssl rand -hex 8)"
           {
-            echo 'notes<<EOF'
+            echo "notes<<${delimiter}"
             echo "$notes"
-            echo EOF
+            echo "${delimiter}"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Publish GitHub release
+      - name: Publish to Modrinth
+        if: ${{ vars.MODRINTH_ID != '' }}
+        uses: Kir-Antipov/mc-publish@v3
+        with:
+          fail-mode: warn
+          modrinth-id: ${{ vars.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: |
+            build/libs/!(*-plain|*-sources|*-dev).jar
+          loaders: paper
+          game-versions: ${{ vars.MODRINTH_GAME_VERSIONS }}
+          version: ${{ github.ref_name }}
+          name: ${{ github.event.repository.name }} ${{ github.ref_name }}
+          changelog: ${{ steps.changelog.outputs.notes }}
+
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: build/libs/*.jar
           body: ${{ steps.changelog.outputs.notes }}
-
-      - name: Publish to Modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          name: JWarp ${{ github.ref_name }}
-          version: ${{ github.ref_name }}
-          version-type: release
-          changelog: ${{ steps.changelog.outputs.notes }}
-          files: build/libs/*.jar
-          modrinth-id: ${{ vars.MODRINTH_ID }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          game-versions: ${{ vars.MODRINTH_GAME_VERSIONS }}
-          loaders: paper
