@@ -15,6 +15,10 @@ sound:
 # Global warp cooldown in seconds.
 warp-cooldown: 3.0
 
+# Whether to allow warps to other dimensions (e.g., Nether, End).
+# If false, /warp will fail if the warp is in a different dimension than the player.
+allow-other-dimension: true
+
 # Actionbar is shown for successful /warp teleports.
 # Minecraft action bars do not expose a real fade-out animation, so fadeout-ticks
 # is treated as extra hold time before the bar is cleared.

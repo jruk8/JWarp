@@ -158,6 +158,16 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
             return true;
         }
 
+        // disallow warps to other dimensions if configured.
+        if (!getConfig().getBoolean("allow-other-dimension", true)) {
+            String playerWorld = player.getWorld().getName();
+            String warpWorld = location.getWorld() == null ? "" : location.getWorld().getName();
+            if (!Objects.equals(playerWorld, warpWorld)) {
+                player.sendMessage(message("warp.other-dimension", Map.of("{warp}", warpName)));
+                return true;
+            }
+        }
+
         player.teleport(location);
         cooldownTracker.markWarp(player.getUniqueId(), System.currentTimeMillis());
         player.sendMessage(message("warp.teleported", Map.of("{warp}", warpName)));
