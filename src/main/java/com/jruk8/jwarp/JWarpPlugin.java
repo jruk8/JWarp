@@ -71,6 +71,10 @@ public final class JWarpPlugin extends JavaPlugin implements CommandExecutor, Ta
         getServer().getPluginManager().registerEvents(this, this);
 
         getServer().getOnlinePlayers().forEach(this::syncBypassState);
+
+        // Register bStats
+        var metricsBootstrap = new MetricsBootstrap(this);
+        metricsBootstrap.register();
     }
 
     @Override
