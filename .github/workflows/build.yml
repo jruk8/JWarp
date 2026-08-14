@@ -3,6 +3,5 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-jobs:
   build:
     uses: jruk8/plugin-conventions/.github/workflows/build.yml@v1.3.5
